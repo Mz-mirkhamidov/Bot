@@ -75,3 +75,13 @@ export function readValidatedInitData(req: Request): ValidatedInitData | null | 
   const validated = validateTelegramInitData(initDataRaw, botToken);
   return validated ?? "invalid";
 }
+
+// Admin endpointlari uchun: initData MAJBURIY va foydalanuvchi ADMIN_TELEGRAM_IDS
+// ro'yxatida bo'lishi kerak (TZ 8.2, T9). Aks holda null — chaqiruvchi 403 qaytaradi.
+export function getAdminUserId(req: Request): number | null {
+  const result = readValidatedInitData(req);
+  if (result === "invalid" || result === null) return null;
+  const userId = result.user?.id;
+  if (!isAdminUserId(userId)) return null;
+  return userId as number;
+}

@@ -1,22 +1,9 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { retrieveRawInitData } from "@telegram-apps/sdk-react";
+import { useSafeRawInitData } from "@/lib/useTelegramInitData";
+import { callApi } from "@/lib/apiClient";
 import type { SessionQuestion, SessionStartResponse } from "@/types/session";
-
-// Telegramdan tashqarida (oddiy brauzerda) ochilganda retrieveRawInitData xato
-// tashlaydi — buni faqat clientda, effekt ichida xavfsiz o'qiymiz.
-function useSafeRawInitData(): string | undefined {
-  const [raw, setRaw] = useState<string | undefined>(undefined);
-  useEffect(() => {
-    try {
-      setRaw(retrieveRawInitData());
-    } catch {
-      setRaw(undefined);
-    }
-  }, []);
-  return raw;
-}
 
 type State = {
   loading: boolean;
@@ -24,30 +11,8 @@ type State = {
   data: SessionStartResponse | null;
 };
 
-async function callApi<T>(
-  path: string,
-  initDataRaw: string | undefined,
-  body: Record<string, unknown>
-): Promise<{ ok: boolean; status: number; json: T | null }> {
-  try {
-    const res = await fetch(path, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        ...(initDataRaw ? { "X-Telegram-Init-Data": initDataRaw } : {}),
-      },
-      body: JSON.stringify(body),
-    });
-    const json = (await res.json().catch(() => null)) as T | null;
-    return { ok: res.ok, status: res.status, json };
-  } catch {
-    // Internet uzilgan yoki so'rov yetib bormagan — chaqiruvchi xatoni qayta urinish uchun ishlatadi.
-    return { ok: false, status: 0, json: null };
-  }
-}
-
 export function useSuhbatSession(token: string) {
-  const initDataRaw = useSafeRawInitData();
+  const { raw: initDataRaw, ready } = useSafeRawInitData();
   const [state, setState] = useState<State>({ loading: true, notFound: false, data: null });
 
   const load = useCallback(async () => {
@@ -55,6 +20,7 @@ export function useSuhbatSession(token: string) {
     const { ok, status, json } = await callApi<SessionStartResponse>(
       "/api/session/start",
       initDataRaw,
+      "POST",
       { token }
     );
     if (!ok || !json) {
@@ -65,12 +31,13 @@ export function useSuhbatSession(token: string) {
   }, [token, initDataRaw]);
 
   useEffect(() => {
+    if (!ready) return;
     load();
-  }, [load]);
+  }, [ready, load]);
 
   const saveAnswer = useCallback(
     async (number: number, text: string, skipped: boolean) => {
-      const { ok } = await callApi("/api/answer", initDataRaw, { token, number, text, skipped });
+      const { ok } = await callApi("/api/answer", initDataRaw, "POST", { token, number, text, skipped });
       if (!ok) return false;
       setState((s) => {
         if (!s.data) return s;
@@ -91,7 +58,7 @@ export function useSuhbatSession(token: string) {
   );
 
   const complete = useCallback(async () => {
-    const { ok } = await callApi("/api/session/complete", initDataRaw, { token });
+    const { ok } = await callApi("/api/session/complete", initDataRaw, "POST", { token });
     return ok;
   }, [token, initDataRaw]);
 

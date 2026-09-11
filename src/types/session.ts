@@ -25,6 +25,7 @@ export type SessionAnswerData = {
 };
 
 export type SessionStatus = "created" | "in_progress" | "completed" | "abandoned";
+export type SessionMode = "self" | "interviewer";
 
 export type SessionStartResponse = {
   session: {
