@@ -17,8 +17,9 @@ export function IntroScreen({ token }: { token: string }) {
   }
 
   const total = flatQuestions.length;
-  const started = data.session.status !== "created";
   const current = Math.min(data.session.currentQuestion, total);
+  // Kamida bitta javob saqlangan bo'lsagina "davom etish" ko'rsatiladi.
+  const started = current > 1;
 
   function handleStart() {
     hapticImpact("medium");
