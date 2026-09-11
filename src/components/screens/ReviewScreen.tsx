@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useSuhbatSession } from "@/lib/useSuhbatSession";
 import { useTelegramBackButton } from "@/lib/useTelegramBackButton";
@@ -18,6 +18,12 @@ export function ReviewScreen({ token }: { token: string }) {
   const handleBack = useCallback(() => {
     router.push(`/s/${token}`);
   }, [router, token]);
+
+  useEffect(() => {
+    if (data?.session.status === "completed") {
+      router.replace(`/s/${token}/done`);
+    }
+  }, [data?.session.status, router, token]);
 
   const handleSubmit = useCallback(async () => {
     setSubmitting(true);

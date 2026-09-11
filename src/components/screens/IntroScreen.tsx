@@ -16,6 +16,12 @@ export function IntroScreen({ token }: { token: string }) {
     return <CenteredMessage text="Havola topilmadi. Iltimos, havolani tekshiring." />;
   }
 
+  if (data.session.status === "completed") {
+    return (
+      <CenteredMessage text={`Rahmat, ${data.respondent.fullName}! Siz bu so'rovnomani allaqachon yakunlagansiz.`} />
+    );
+  }
+
   const total = flatQuestions.length;
   const current = Math.min(data.session.currentQuestion, total);
   // Kamida bitta javob saqlangan bo'lsagina "davom etish" ko'rsatiladi.

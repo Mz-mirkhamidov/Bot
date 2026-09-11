@@ -30,6 +30,12 @@ export function QuestionScreen({ token, number }: { token: string; number: numbe
   const isFirstInBlock = block ? block.questions[0]?.number === number : false;
 
   useEffect(() => {
+    if (data?.session.status === "completed") {
+      router.replace(`/s/${token}/done`);
+    }
+  }, [data?.session.status, router, token]);
+
+  useEffect(() => {
     if (!question) return;
     const existing = data?.answers[number];
     setValue(existing?.skipped ? "" : existing?.text ?? "");
