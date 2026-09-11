@@ -2,9 +2,8 @@ import { GoogleGenAI } from "@google/genai";
 import type { AiSummaryJson } from "@/types/admin";
 
 const TRANSCRIBE_PROMPT =
-  "Bu audio o'zbek tilida yozilgan javob. Uni aynan eshitilganidek matnga o'gir. " +
-  "Hech narsa qo'shma, tushuntirma yozma, tarjima qilma. Faqat matn. " +
-  "Agar ba'zi joy tushunarsiz bo'lsa [?] deb belgila. Raqamlar va summalarni raqam bilan yoz.";
+  "Quyidagi audioni so'zma-so'z o'zbek tilida transkripsiya qilib ber. " +
+  "Hech qanday sharh qo'shma, faqat eshitilgan matnni yoz.";
 
 function getClient(): GoogleGenAI | null {
   const apiKey = process.env.GEMINI_API_KEY;
@@ -16,7 +15,7 @@ function getClient(): GoogleGenAI | null {
 }
 
 function getModelName(): string {
-  return process.env.GEMINI_MODEL || "gemini-3.8-flash";
+  return process.env.GEMINI_MODEL || "gemini-2.5-flash";
 }
 
 const SUMMARY_PROMPT =
