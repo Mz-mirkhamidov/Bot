@@ -7,7 +7,10 @@ const TRANSCRIBE_PROMPT =
 
 function getClient(): GoogleGenAI | null {
   const apiKey = process.env.GEMINI_API_KEY;
-  if (!apiKey) return null;
+  if (!apiKey) {
+    console.error("[gemini] GEMINI_API_KEY o'rnatilmagan");
+    return null;
+  }
   return new GoogleGenAI({ apiKey });
 }
 
@@ -59,8 +62,17 @@ export async function transcribeAudio(
       TRANSCRIBE_TIMEOUT_MS
     );
     const text = response.text?.trim();
-    return text && text.length > 0 ? text : null;
-  } catch {
+    if (!text || text.length === 0) {
+      console.error("[gemini] transkripsiya bo'sh javob qaytardi", { mimeType, model: getModelName() });
+      return null;
+    }
+    return text;
+  } catch (err) {
+    console.error("[gemini] transkripsiya xatosi", {
+      mimeType,
+      model: getModelName(),
+      error: err instanceof Error ? err.message : String(err),
+    });
     return null;
   }
 }
