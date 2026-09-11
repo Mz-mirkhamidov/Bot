@@ -1,9 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { shareURL } from "@telegram-apps/sdk-react";
 import { useCreateSession } from "@/lib/useAdmin";
+import { useTelegramBackButton } from "@/lib/useTelegramBackButton";
 import { useToast, Toast } from "@/components/Toast";
 import type { NewSessionInput } from "@/types/admin";
 
@@ -40,10 +41,14 @@ export function NewSessionScreen() {
   const [mode, setMode] = useState<NewSessionInput["mode"]>("self");
   const [submitting, setSubmitting] = useState(false);
   const [result, setResult] = useState<{ link: string } | null>(null);
+  const submittingRef = useRef(false);
+
+  useTelegramBackButton(() => router.push("/admin"));
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!fullName.trim()) return;
+    if (!fullName.trim() || submittingRef.current) return;
+    submittingRef.current = true;
     setSubmitting(true);
     const res = await createSession({
       fullName: fullName.trim(),
@@ -54,6 +59,7 @@ export function NewSessionScreen() {
       notes: notes.trim() || undefined,
       mode,
     });
+    submittingRef.current = false;
     setSubmitting(false);
     if (!res) {
       show("Sessiya yaratilmadi. Qayta urining.");
@@ -122,6 +128,9 @@ export function NewSessionScreen() {
 
   return (
     <div>
+      <button type="button" onClick={() => router.push("/admin")} style={backLinkStyle}>
+        ← Orqaga
+      </button>
       <div style={{ fontSize: 20, fontWeight: 700, marginBottom: 16 }}>Yangi sessiya</div>
       <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: 14 }}>
         <div>
@@ -211,6 +220,18 @@ export function NewSessionScreen() {
     </div>
   );
 }
+
+const backLinkStyle: React.CSSProperties = {
+  border: "none",
+  background: "none",
+  color: "var(--link)",
+  fontSize: 14,
+  fontWeight: 600,
+  cursor: "pointer",
+  padding: 0,
+  marginBottom: 16,
+  display: "block",
+};
 
 const primaryButtonStyle: React.CSSProperties = {
   flex: 1,

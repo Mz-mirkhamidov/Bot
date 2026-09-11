@@ -1,13 +1,18 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { useAdminSessionDetail } from "@/lib/useAdmin";
+import { useTelegramBackButton } from "@/lib/useTelegramBackButton";
 import { formatDate, modeLabel, statusColor, statusLabel } from "@/lib/format";
 import { AudioAnswerControls } from "@/components/AudioAnswerControls";
 
 const FLAG_EMOJI: Record<string, string> = { green: "🟢", red: "🔴", star: "⭐" };
 
 export function AdminSessionDetailScreen({ id }: { id: string }) {
+  const router = useRouter();
   const { loading, forbidden, notFound, detail, reloadSilently } = useAdminSessionDetail(id);
+
+  useTelegramBackButton(() => router.push("/admin"));
 
   if (loading) return <CenteredMessage text="Yuklanmoqda..." />;
   if (forbidden) return <CenteredMessage text="Ruxsat yo'q." />;
@@ -19,6 +24,9 @@ export function AdminSessionDetailScreen({ id }: { id: string }) {
 
   return (
     <div style={{ paddingBottom: 32 }}>
+      <button type="button" onClick={() => router.push("/admin")} style={backLinkStyle}>
+        ← Orqaga
+      </button>
       <div style={{ marginBottom: 20 }}>
         <div style={{ fontSize: 20, fontWeight: 700 }}>{detail.respondent.fullName}</div>
         {detail.respondent.orgName && (
@@ -139,3 +147,15 @@ function CenteredMessage({ text }: { text: string }) {
     </div>
   );
 }
+
+const backLinkStyle: React.CSSProperties = {
+  border: "none",
+  background: "none",
+  color: "var(--link)",
+  fontSize: 14,
+  fontWeight: 600,
+  cursor: "pointer",
+  padding: 0,
+  marginBottom: 16,
+  display: "block",
+};
