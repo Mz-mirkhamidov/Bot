@@ -48,12 +48,23 @@ export async function POST(req: Request) {
   const trimmedText = text?.trim() ?? "";
   const isSkipped = skipped || trimmedText.length === 0;
 
+  const { data: existing } = await supabase
+    .from("answers")
+    .select("transcript")
+    .eq("session_id", session.id)
+    .eq("question_id", question.id)
+    .maybeSingle();
+
+  // Transkriptdan olingan javob qo'lda o'zgartirilsa is_edited=true bo'ladi (TZ 8.3).
+  const isEdited = !!existing?.transcript && trimmedText !== existing.transcript;
+
   const { error: upsertError } = await supabase.from("answers").upsert(
     {
       session_id: session.id,
       question_id: question.id,
       text: trimmedText.length > 0 ? trimmedText : null,
       skipped: isSkipped,
+      is_edited: isEdited,
     },
     { onConflict: "session_id,question_id" }
   );

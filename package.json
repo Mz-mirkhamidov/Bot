@@ -7,7 +7,8 @@
     "build": "next build --turbopack",
     "start": "next start",
     "lint": "eslint",
-    "seed": "tsx scripts/seed.ts"
+    "seed": "tsx scripts/seed.ts",
+    "set-webhook": "tsx scripts/set-webhook.ts"
   },
   "dependencies": {
     "@google/genai": "^2.22.0",

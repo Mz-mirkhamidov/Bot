@@ -46,32 +46,41 @@ export function useAdminSessionDetail(id: string) {
   const [notFound, setNotFound] = useState(false);
   const [detail, setDetail] = useState<AdminSessionDetail | null>(null);
 
-  const load = useCallback(async () => {
-    setLoading(true);
-    const { ok, status, json } = await callApi<AdminSessionDetail>(
-      `/api/admin/session/${id}`,
-      initDataRaw,
-      "GET"
-    );
-    if (!ok || !json) {
-      setForbidden(status === 403);
-      setNotFound(status === 404);
-      setDetail(null);
+  const load = useCallback(
+    async (silent = false) => {
+      if (!silent) setLoading(true);
+      const { ok, status, json } = await callApi<AdminSessionDetail>(
+        `/api/admin/session/${id}`,
+        initDataRaw,
+        "GET"
+      );
+      if (!ok || !json) {
+        setForbidden(status === 403);
+        setNotFound(status === 404);
+        if (!silent) setDetail(null);
+        setLoading(false);
+        return;
+      }
+      setForbidden(false);
+      setNotFound(false);
+      setDetail(json);
       setLoading(false);
-      return;
-    }
-    setForbidden(false);
-    setNotFound(false);
-    setDetail(json);
-    setLoading(false);
-  }, [id, initDataRaw]);
+    },
+    [id, initDataRaw]
+  );
 
   useEffect(() => {
     if (!ready) return;
     load();
-  }, [ready, load]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [ready, id, initDataRaw]);
 
-  return { loading, forbidden, notFound, detail, reload: load };
+  // Qayta transkripsiyadan keyingi kabi "sokin" yangilanishlar uchun —
+  // sahifani "Yuklanmoqda..." holatiga qaytarib, ko'rsatilgan xabarni
+  // yo'qotib yubormaslik uchun (silent=true).
+  const reloadSilently = useCallback(() => load(true), [load]);
+
+  return { loading, forbidden, notFound, detail, reload: load, reloadSilently };
 }
 
 export function useCreateSession() {

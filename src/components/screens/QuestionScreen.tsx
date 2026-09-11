@@ -12,6 +12,7 @@ import { AnswerInput } from "@/components/AnswerInput";
 import { NavButtons } from "@/components/NavButtons";
 import { BlockIntro } from "@/components/BlockIntro";
 import { Toast, useToast } from "@/components/Toast";
+import { VoiceRecorder } from "@/components/VoiceRecorder";
 
 function blockIntroKey(token: string, blockCode: string) {
   return `suhbat_block_intro_${token}_${blockCode}`;
@@ -139,6 +140,18 @@ export function QuestionScreen({ token, number }: { token: string; number: numbe
           }
         }}
       />
+      {question.allowVoice && (
+        <VoiceRecorder
+          token={token}
+          number={number}
+          hasSavedAudio={!!data.answers[number]?.text && !data.answers[number]?.skipped}
+          onTranscribed={(text) => {
+            setValue(text);
+            saveAnswer(number, text, false);
+            show("Matnga o'girildi");
+          }}
+        />
+      )}
       <NavButtons onSkip={handleSkip} onNext={handleNext} nextLabel={number === total ? "Ko'rib chiqish" : "Keyingi"} />
       <Toast message={message} />
     </div>

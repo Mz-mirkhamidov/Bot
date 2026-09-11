@@ -2,11 +2,12 @@
 
 import { useAdminSessionDetail } from "@/lib/useAdmin";
 import { formatDate, modeLabel, statusColor, statusLabel } from "@/lib/format";
+import { AudioAnswerControls } from "@/components/AudioAnswerControls";
 
 const FLAG_EMOJI: Record<string, string> = { green: "🟢", red: "🔴", star: "⭐" };
 
 export function AdminSessionDetailScreen({ id }: { id: string }) {
-  const { loading, forbidden, notFound, detail } = useAdminSessionDetail(id);
+  const { loading, forbidden, notFound, detail, reloadSilently } = useAdminSessionDetail(id);
 
   if (loading) return <CenteredMessage text="Yuklanmoqda..." />;
   if (forbidden) return <CenteredMessage text="Ruxsat yo'q." />;
@@ -115,9 +116,11 @@ export function AdminSessionDetailScreen({ id }: { id: string }) {
                     )}
                   </div>
                   {q.audioPath && (
-                    <div style={{ fontSize: 12, color: "var(--text-muted)", marginTop: 4 }}>
-                      🎤 Ovozli javob mavjud
-                    </div>
+                    <AudioAnswerControls
+                      sessionId={id}
+                      number={q.number}
+                      onRetranscribed={() => reloadSilently()}
+                    />
                   )}
                 </div>
               ))}

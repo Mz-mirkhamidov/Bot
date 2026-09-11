@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { supabase } from "@/lib/supabase";
 import { readValidatedInitData } from "@/lib/telegram-auth";
-import { notifyAdmins, formatSessionCompletedMessage } from "@/lib/telegram";
+import { notifyAdmins, formatSessionCompletedMessage, sessionDetailKeyboard } from "@/lib/telegram";
 
 const bodySchema = z.object({
   token: z.string().min(8).max(64),
@@ -67,7 +67,8 @@ export async function POST(req: Request) {
         orgName: respondent.org_name,
         answeredCount: answeredCount ?? 0,
         totalCount: totalCount ?? 45,
-      })
+      }),
+      sessionDetailKeyboard(session.id)
     );
   }
 
