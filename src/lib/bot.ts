@@ -1,8 +1,8 @@
 import { Bot, InlineKeyboard } from "grammy";
-import { isAdminUserId } from "@/lib/telegram-auth";
 import { escapeHtml } from "@/lib/htmlEscape";
 import { supabase } from "@/lib/supabase";
 import { transcribeAndSaveAnswer } from "@/lib/voiceTranscription";
+import { registerAdminHandlers } from "@/lib/botAdmin";
 import {
   TOTAL_QUESTIONS,
   getSessionByToken,
@@ -41,6 +41,12 @@ export const bot = new Bot(token, {
     supports_join_request_queries: false,
   },
 });
+
+// Admin handlerlari respondent handlerlaridan OLDIN ro'yxatdan o'tkaziladi:
+// grammy middleware'lari ro'yxatdan o'tish tartibida ishlaydi, admin
+// handlerlari o'ziga tegishli bo'lmagan yangilanishlarni next() orqali
+// keyingisiga (respondent oqimiga) uzatadi.
+registerAdminHandlers(bot);
 
 function buildQuestionKeyboard(question: QuestionRow): InlineKeyboard {
   if (question.type === "multi_choice") {
@@ -154,12 +160,6 @@ bot.command("start", async (ctx) => {
     "Assalomu alaykum! Bu — bog'cha faoliyati bo'yicha so'rovnoma boti.",
     { reply_markup: keyboard }
   );
-});
-
-bot.command("admin", async (ctx) => {
-  if (!isAdminUserId(ctx.from?.id)) return;
-  const keyboard = new InlineKeyboard().webApp("Admin panel", `${appUrl}/admin`);
-  await ctx.reply("Admin panel:", { reply_markup: keyboard });
 });
 
 bot.on("message:text", async (ctx) => {

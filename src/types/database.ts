@@ -17,6 +17,27 @@ export type Database = {
   }
   public: {
     Tables: {
+      admin_drafts: {
+        Row: {
+          chat_id: number
+          data: Json
+          step: string
+          updated_at: string
+        }
+        Insert: {
+          chat_id: number
+          data?: Json
+          step: string
+          updated_at?: string
+        }
+        Update: {
+          chat_id?: number
+          data?: Json
+          step?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       answers: {
         Row: {
           audio_path: string | null
