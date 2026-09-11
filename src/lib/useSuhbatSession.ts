@@ -1,8 +1,22 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { useRawInitData } from "@telegram-apps/sdk-react";
+import { retrieveRawInitData } from "@telegram-apps/sdk-react";
 import type { SessionQuestion, SessionStartResponse } from "@/types/session";
+
+// Telegramdan tashqarida (oddiy brauzerda) ochilganda retrieveRawInitData xato
+// tashlaydi — buni faqat clientda, effekt ichida xavfsiz o'qiymiz.
+function useSafeRawInitData(): string | undefined {
+  const [raw, setRaw] = useState<string | undefined>(undefined);
+  useEffect(() => {
+    try {
+      setRaw(retrieveRawInitData());
+    } catch {
+      setRaw(undefined);
+    }
+  }, []);
+  return raw;
+}
 
 type State = {
   loading: boolean;
@@ -33,7 +47,7 @@ async function callApi<T>(
 }
 
 export function useSuhbatSession(token: string) {
-  const initDataRaw = useRawInitData();
+  const initDataRaw = useSafeRawInitData();
   const [state, setState] = useState<State>({ loading: true, notFound: false, data: null });
 
   const load = useCallback(async () => {
