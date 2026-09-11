@@ -1,3 +1,28 @@
+export async function downloadFile(
+  path: string,
+  initDataRaw: string | undefined,
+  filename: string
+): Promise<boolean> {
+  try {
+    const res = await fetch(path, {
+      headers: initDataRaw ? { "X-Telegram-Init-Data": initDataRaw } : {},
+    });
+    if (!res.ok) return false;
+    const blob = await res.blob();
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 export async function callApi<T>(
   path: string,
   initDataRaw: string | undefined,

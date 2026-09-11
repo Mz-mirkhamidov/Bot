@@ -44,6 +44,12 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
     .select("question_id, text, skipped, audio_path, transcript, is_edited, flag")
     .eq("session_id", session.id);
 
+  const { data: summaryRow } = await supabase
+    .from("session_summaries")
+    .select("*")
+    .eq("session_id", session.id)
+    .maybeSingle();
+
   const answerByQuestionId = new Map((answers ?? []).map((a) => [a.question_id, a]));
 
   const responseBlocks: AdminSessionBlock[] = (blocks ?? []).map((b) => ({
@@ -88,6 +94,22 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
       notes: respondent?.notes ?? null,
     },
     blocks: responseBlocks,
+    summary: {
+      aiSummary: (summaryRow?.ai_summary as AdminSessionDetail["summary"]["aiSummary"]) ?? null,
+      aiGeneratedAt: summaryRow?.ai_generated_at ?? null,
+      manual: {
+        biggestPain: summaryRow?.biggest_pain ?? null,
+        hoursPerMonth: summaryRow?.hours_per_month ?? null,
+        moneyLost12m: summaryRow?.money_lost_12m ?? null,
+        currentSolution: summaryRow?.current_solution ?? null,
+        paidBefore: summaryRow?.paid_before ?? null,
+        paidBeforeAmount: summaryRow?.paid_before_amount ?? null,
+        hypothesisConfirmed: summaryRow?.hypothesis_confirmed ?? null,
+        referralOk: summaryRow?.referral_ok ?? null,
+        telegramGroup: summaryRow?.telegram_group ?? null,
+        surprise: summaryRow?.surprise ?? null,
+      },
+    },
   };
 
   return NextResponse.json(response);

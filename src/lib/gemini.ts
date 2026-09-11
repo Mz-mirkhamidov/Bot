@@ -1,4 +1,5 @@
 import { GoogleGenAI } from "@google/genai";
+import type { AiSummaryJson } from "@/types/admin";
 
 const TRANSCRIBE_PROMPT =
   "Bu audio o'zbek tilida yozilgan javob. Uni aynan eshitilganidek matnga o'gir. " +
@@ -16,6 +17,60 @@ function getClient(): GoogleGenAI | null {
 
 function getModelName(): string {
   return process.env.GEMINI_MODEL || "gemini-3.8-flash";
+}
+
+const SUMMARY_PROMPT =
+  "Sen intervyu tahlilchisisan. Faqat respondent AYTGAN narsaga tayan. " +
+  "Hech narsa o'ylab topma yoki taxmin qilma. Ma'lumot yetishmasa \"missing_info\" ga yoz. " +
+  "Maqtov va umumiy gaplarni dalil deb hisoblama — faqat aniq sana, summa va hodisalar dalil bo'ladi.\n\n" +
+  "Quyida bog'cha direktori bilan o'tkazilgan so'rovnomaning savol-javoblari berilgan. " +
+  "Shular asosida faqat quyidagi JSON formatida (boshqa hech narsa qo'shmasdan) xulosa chiqar:\n\n" +
+  `{
+  "biggest_pain": "string — respondentning o'z so'zlari bilan",
+  "pain_evidence": ["aniq iqtiboslar"],
+  "numbers_mentioned": [{"what":"...","value":"...","question":12}],
+  "time_costs": [{"activity":"...","hours_per_month":0}],
+  "money_at_risk": "string yoki null",
+  "already_paid_for": "string yoki null",
+  "hypothesis_signals": {"subsidy":"strong|weak|none","documents":"strong|weak|none","occupancy":"strong|weak|none"},
+  "green_flags": ["..."],
+  "red_flags": ["..."],
+  "quotes_worth_keeping": ["..."],
+  "missing_info": ["aniqlanmagan, qayta so'rash kerak bo'lgan narsalar"]
+}`;
+
+const SUMMARY_TIMEOUT_MS = 60_000;
+
+export async function generateSessionSummary(
+  qaPairs: { number: number; text: string; answer: string }[]
+): Promise<AiSummaryJson | null> {
+  const ai = getClient();
+  if (!ai) return null;
+
+  const transcript = qaPairs.map((qa) => `${qa.number}. ${qa.text}\nJavob: ${qa.answer}`).join("\n\n");
+
+  try {
+    const response = await withTimeout(
+      ai.models.generateContent({
+        model: getModelName(),
+        contents: [{ role: "user", parts: [{ text: `${SUMMARY_PROMPT}\n\n=== SAVOL-JAVOBLAR ===\n${transcript}` }] }],
+        config: { responseMimeType: "application/json" },
+      }),
+      SUMMARY_TIMEOUT_MS
+    );
+    const text = response.text?.trim();
+    if (!text) {
+      console.error("[gemini] xulosa bo'sh javob qaytardi", { model: getModelName() });
+      return null;
+    }
+    return JSON.parse(text) as AiSummaryJson;
+  } catch (err) {
+    console.error("[gemini] xulosa generatsiya xatosi", {
+      model: getModelName(),
+      error: err instanceof Error ? err.message : String(err),
+    });
+    return null;
+  }
 }
 
 const TRANSCRIBE_TIMEOUT_MS = 60_000;

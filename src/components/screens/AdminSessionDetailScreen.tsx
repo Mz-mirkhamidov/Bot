@@ -5,6 +5,7 @@ import { useAdminSessionDetail } from "@/lib/useAdmin";
 import { useTelegramBackButton } from "@/lib/useTelegramBackButton";
 import { formatDate, modeLabel, statusColor, statusLabel } from "@/lib/format";
 import { AudioAnswerControls } from "@/components/AudioAnswerControls";
+import { SummarySection } from "@/components/SummarySection";
 
 const FLAG_EMOJI: Record<string, string> = { green: "🟢", red: "🔴", star: "⭐" };
 
@@ -136,6 +137,8 @@ export function AdminSessionDetailScreen({ id }: { id: string }) {
           </div>
         ))}
       </div>
+
+      <SummarySection sessionId={id} summary={detail.summary} />
     </div>
   );
 }
