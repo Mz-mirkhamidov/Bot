@@ -30,35 +30,28 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "not_found" }, { status: 404 });
   }
 
-  let status = session.status;
-  let startedAt = session.started_at;
-  if (status === "created") {
-    startedAt = new Date().toISOString();
-    status = "in_progress";
-    await supabase
-      .from("sessions")
-      .update({ status, started_at: startedAt })
-      .eq("id", session.id);
-    await supabase.from("events").insert({ session_id: session.id, type: "session_opened" });
-  }
+  const isFirstOpen = session.status === "created";
+  const status = isFirstOpen ? "in_progress" : session.status;
+  const startedAt = isFirstOpen ? new Date().toISOString() : session.started_at;
 
-  const { data: respondent } = await supabase
-    .from("respondents")
-    .select("full_name, org_name")
-    .eq("id", session.respondent_id)
-    .single();
-
-  const { data: questionnaire } = await supabase
-    .from("questionnaires")
-    .select("title")
-    .eq("id", session.questionnaire_id)
-    .single();
-
-  const { data: blocks } = await supabase
-    .from("question_blocks")
-    .select("id, code, title, description, order_index")
-    .eq("questionnaire_id", session.questionnaire_id)
-    .order("order_index");
+  // Bir-biriga bog'liq bo'lmagan so'rovlarni parallel yuborish — ketma-ket
+  // bajarilganda har bir so'rov tarmoq kechikishini qo'shib boraveradi.
+  const [{ data: respondent }, { data: questionnaire }, { data: blocks }, { data: answers }] = await Promise.all([
+    supabase.from("respondents").select("full_name, org_name").eq("id", session.respondent_id).single(),
+    supabase.from("questionnaires").select("title").eq("id", session.questionnaire_id).single(),
+    supabase
+      .from("question_blocks")
+      .select("id, code, title, description, order_index")
+      .eq("questionnaire_id", session.questionnaire_id)
+      .order("order_index"),
+    supabase.from("answers").select("question_id, text, skipped, is_edited").eq("session_id", session.id),
+    ...(isFirstOpen
+      ? [
+          supabase.from("sessions").update({ status, started_at: startedAt }).eq("id", session.id),
+          supabase.from("events").insert({ session_id: session.id, type: "session_opened" }),
+        ]
+      : []),
+  ]);
 
   const blockIds = (blocks ?? []).map((b) => b.id);
 
@@ -67,11 +60,6 @@ export async function POST(req: Request) {
     .select("id, block_id, number, order_index, text, hint, type, options, allow_voice, is_key")
     .in("block_id", blockIds.length > 0 ? blockIds : ["00000000-0000-0000-0000-000000000000"])
     .order("order_index");
-
-  const { data: answers } = await supabase
-    .from("answers")
-    .select("question_id, text, skipped, is_edited")
-    .eq("session_id", session.id);
 
   const questionNumberById = new Map<string, number>();
   for (const q of questions ?? []) {
