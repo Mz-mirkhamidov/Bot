@@ -1,12 +1,8 @@
 import { InlineKeyboard } from "grammy";
 import { bot } from "@/lib/bot";
+import { escapeHtml } from "@/lib/htmlEscape";
 
-export function escapeHtml(text: string): string {
-  return text
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;");
-}
+export { escapeHtml };
 
 export async function sendTelegramMessage(
   chatId: string | number,

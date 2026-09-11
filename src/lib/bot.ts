@@ -1,6 +1,6 @@
 import { Bot, InlineKeyboard } from "grammy";
 import { isAdminUserId } from "@/lib/telegram-auth";
-import { escapeHtml } from "@/lib/telegram";
+import { escapeHtml } from "@/lib/htmlEscape";
 import { supabase } from "@/lib/supabase";
 import { transcribeAndSaveAnswer } from "@/lib/voiceTranscription";
 import {

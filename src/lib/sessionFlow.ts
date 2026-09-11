@@ -1,5 +1,4 @@
 import { supabase } from "@/lib/supabase";
-import { notifyAdmins, formatSessionCompletedMessage, sessionDetailKeyboard } from "@/lib/telegram";
 import type { Database } from "@/types";
 
 export type SessionRow = Database["public"]["Tables"]["sessions"]["Row"];
@@ -139,6 +138,9 @@ export async function completeSession(session: SessionRow): Promise<void> {
   ]);
 
   if (respondent) {
+    // Dinamik import — bot/grammy/Gemini bog'liqliklari faqat sessiya
+    // haqiqatan yakunlanganda yuklanadi, har bir /api/answer so'rovida emas.
+    const { notifyAdmins, formatSessionCompletedMessage, sessionDetailKeyboard } = await import("@/lib/telegram");
     await notifyAdmins(
       formatSessionCompletedMessage({
         fullName: respondent.full_name,
