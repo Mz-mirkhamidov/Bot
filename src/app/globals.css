@@ -1,0 +1,66 @@
+@import "tailwindcss";
+
+:root {
+  --bg: var(--tg-theme-bg-color, #ffffff);
+  --bg-secondary: var(--tg-theme-secondary-bg-color, #f4f6f9);
+  --text: var(--tg-theme-text-color, #1a1d21);
+  --text-muted: var(--tg-theme-hint-color, #7c8899);
+  --link: var(--tg-theme-link-color, #1e5eb8);
+  --button: var(--tg-theme-button-color, #1e5eb8);
+  --button-text: var(--tg-theme-button-text-color, #ffffff);
+  --border: rgba(128, 138, 152, 0.22);
+
+  /* brend aksentlari (temadan qat'i nazar) */
+  --accent: #1e5eb8;
+  --success: #16a34a;
+  --danger: #dc2626;
+  --warning: #d97706;
+  --star: #ca8a04;
+
+  --radius: 12px;
+  --radius-lg: 16px;
+}
+
+@theme inline {
+  --color-bg: var(--bg);
+  --color-bg-secondary: var(--bg-secondary);
+  --color-text: var(--text);
+  --color-text-muted: var(--text-muted);
+  --color-link: var(--link);
+  --color-button: var(--button);
+  --color-button-text: var(--button-text);
+  --color-border: var(--border);
+  --color-accent: var(--accent);
+  --color-success: var(--success);
+  --color-danger: var(--danger);
+  --color-warning: var(--warning);
+  --color-star: var(--star);
+  --radius-md: var(--radius);
+  --radius-lg: var(--radius-lg);
+}
+
+* {
+  -webkit-tap-highlight-color: transparent;
+}
+
+html,
+body {
+  height: 100%;
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
