@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { supabase } from "@/lib/supabase";
 import { readValidatedInitData } from "@/lib/telegram-auth";
+import { getSessionByToken, getQuestionByNumber, saveAnswerAndAdvance } from "@/lib/sessionFlow";
 
 const bodySchema = z.object({
   token: z.string().min(8).max(64),
@@ -22,12 +22,7 @@ export async function POST(req: Request) {
   }
   const { token, number, text, skipped } = parsed.data;
 
-  const { data: session } = await supabase
-    .from("sessions")
-    .select("id, status")
-    .eq("token", token)
-    .maybeSingle();
-
+  const session = await getSessionByToken(token);
   if (!session) {
     return NextResponse.json({ error: "not_found" }, { status: 404 });
   }
@@ -35,57 +30,12 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "session_completed" }, { status: 409 });
   }
 
-  const { data: question } = await supabase
-    .from("questions")
-    .select("id")
-    .eq("number", number)
-    .maybeSingle();
-
+  const question = await getQuestionByNumber(number);
   if (!question) {
     return NextResponse.json({ error: "question_not_found" }, { status: 404 });
   }
 
-  const trimmedText = text?.trim() ?? "";
-  const isSkipped = skipped || trimmedText.length === 0;
-
-  const { data: existing } = await supabase
-    .from("answers")
-    .select("transcript")
-    .eq("session_id", session.id)
-    .eq("question_id", question.id)
-    .maybeSingle();
-
-  // Transkriptdan olingan javob qo'lda o'zgartirilsa is_edited=true bo'ladi (TZ 8.3).
-  const isEdited = !!existing?.transcript && trimmedText !== existing.transcript;
-
-  const { error: upsertError } = await supabase.from("answers").upsert(
-    {
-      session_id: session.id,
-      question_id: question.id,
-      text: trimmedText.length > 0 ? trimmedText : null,
-      skipped: isSkipped,
-      is_edited: isEdited,
-    },
-    { onConflict: "session_id,question_id" }
-  );
-
-  if (upsertError) {
-    return NextResponse.json({ error: "server_error" }, { status: 500 });
-  }
-
-  await supabase
-    .from("sessions")
-    .update({
-      current_question: Math.min(number + 1, 46),
-      status: session.status === "created" ? "in_progress" : session.status,
-    })
-    .eq("id", session.id);
-
-  await supabase.from("events").insert({
-    session_id: session.id,
-    type: "answer_saved",
-    payload: { number, skipped: isSkipped },
-  });
+  await saveAnswerAndAdvance(session, question, text ?? "", skipped);
 
   return NextResponse.json({ ok: true });
 }

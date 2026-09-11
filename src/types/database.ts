@@ -330,6 +330,7 @@ export type Database = {
           respondent_id: string
           started_at: string | null
           status: Database["public"]["Enums"]["session_status"]
+          telegram_chat_id: number | null
           token: string
         }
         Insert: {
@@ -342,6 +343,7 @@ export type Database = {
           respondent_id: string
           started_at?: string | null
           status?: Database["public"]["Enums"]["session_status"]
+          telegram_chat_id?: number | null
           token: string
         }
         Update: {
@@ -354,6 +356,7 @@ export type Database = {
           respondent_id?: string
           started_at?: string | null
           status?: Database["public"]["Enums"]["session_status"]
+          telegram_chat_id?: number | null
           token?: string
         }
         Relationships: [
