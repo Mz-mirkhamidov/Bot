@@ -1,8 +1,10 @@
 // Foydalanish: npm run seed
 // src/data/questions.ts'dagi savollarni Supabase bazasiga yozadi (upsert).
 
-import "dotenv/config";
+import { config } from "dotenv";
 import { createClient } from "@supabase/supabase-js";
+
+config({ path: ".env.local" });
 import { questionnaire, seedBlocks } from "../src/data/questions";
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
