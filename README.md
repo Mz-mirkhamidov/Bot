@@ -1,12 +1,20 @@
 # Bog'cha so'rovnomasi — o'rnatish
 
-Uch fayl, hech qanday build yo'q. Vercel'ga tashlaysiz va ikkita o'zgaruvchi qo'shasiz — tamom.
+Hech qanday build yo'q — Vercel'ga tashlaysiz va kerakli o'zgaruvchilarni qo'shasiz.
+So'rovnoma sayti + bot + admin panel, uchtasi ham shu bitta loyihada.
 
 ```
 index.html                  ← butun sayt (CSS va JS ichida, tashqi fayl yo'q)
-api/submit.js               ← javoblarni Telegramga yuboradi
-api/telegram-webhook.js     ← bot /start bosilganda saytga tugma yuboradi
-package.json                ← faqat "type": "module" uchun
+admin/index.html             ← admin panel (parol bilan kirish, javoblar ro'yxati)
+api/submit.js                ← javobni bazaga saqlaydi + Telegramga qisqa xabar yuboradi
+api/telegram-webhook.js      ← bot /start bosilganda saytga tugma yuboradi
+api/admin/login.js           ← admin parolni tekshiradi, sessiya cookie qo'yadi
+api/admin/logout.js          ← sessiyani tugatadi
+api/admin/list.js            ← barcha so'rovnomalar ro'yxati
+api/admin/submission.js      ← bitta so'rovnomaning to'liq tafsiloti
+api/admin/export.js          ← bitta so'rovnomani qisqa .txt fayl qilib yuklab beradi
+lib/                         ← Supabase va admin autentifikatsiya uchun yordamchi kod
+package.json                 ← faqat "type": "module" uchun
 ```
 
 ---
@@ -76,6 +84,29 @@ o'zingiz tanlagan tasodifiy matn yozib, `setWebhook` so'roviga
 `&secret_token=<xuddi shu matn>` qo'shib yuborsangiz, faqat Telegram'dan kelgan
 so'rovlar qabul qilinadi.
 
+## 7. Admin panel (`/admin`) — barcha javoblarni ko'rish
+
+Har bir to'ldirilgan so'rovnoma endi bazaga (Supabase) saqlanadi va `/admin`
+sahifasida ro'yxat + har birining to'liq tafsiloti ko'rinadi. Har bir yozuvni
+bitta tugma bilan qisqa `.txt` fayl qilib yuklab olish mumkin — uzun matn
+o'qishga to'g'ri kelmaydi.
+
+**Kerakli o'zgaruvchilar** (Vercel → Settings → Environment Variables):
+
+| Nomi | Qiymati |
+|---|---|
+| `SUPABASE_URL` | Supabase loyihangiz manzili (masalan `https://xxxxx.supabase.co`) |
+| `SUPABASE_SERVICE_ROLE_KEY` | Supabase → Settings → API → **service_role** (maxfiy) kalit |
+| `ADMIN_PASSWORD` | `/admin` sahifasiga kirish uchun o'zingiz tanlagan parol |
+
+`ADMIN_PASSWORD` — bu **admin kim ekanini bildiruvchi yagona narsa**: uni
+biladigan odam `/admin`ga kira oladi. Agar buni Telegram chat ID orqali emas,
+alohida odam/qurilma uchun boshqacha qilib xohlasangiz (masalan bir nechta
+admin, har biriga alohida parol) — ayting, shuni ham qo'shib beraman.
+
+Qo'shgandan keyin qayta deploy qiling, so'ng `https://suhbat-omega.vercel.app/admin`
+sahifasini oching va parolni kiriting.
+
 ---
 
 ## Nima qanday ishlaydi
@@ -88,13 +119,16 @@ deb turadi va javoblari joyida bo'ladi.
 "Qayta yuborish" tugmasi chiqadi, hamda "Javoblarni nusxalash" tugmasi
 (hammasini matn qilib nusxalaydi, Telegram orqali qo'lda yuborsa bo'ladi).
 
-**Telegram cheklovi.** Bitta xabar 4096 belgidan oshmaydi, shuning uchun javoblar
-bir necha xabarga bo'lib yuboriladi. Oxirida to'liq JSON fayl ham keladi —
-keyinchalik tahlil qilish uchun shu qulay.
+**Telegram — endi qisqa xabar.** Yangi so'rovnoma kelganda Telegramga
+bog'cha nomi, telefon va to'ldirilgan savollar soni bilan bitta qisqa xabar
+keladi (to'liq javoblar endi `/admin` panelida). Agar bironsababdan baza
+yozib bo'lmasa — eski uslubda to'liq matn + JSON fayl zaxira sifatida
+yuboriladi, hech qanday javob yo'qolmaydi.
 
-**Hech qanday baza yo'q.** Ataylab. Buziladigan joy kam bo'lsin dedik.
-Agar keyin javoblarni bazaga yig'ish kerak bo'lsa — `TZ.md` dagi to'liq variantga
-o'tasiz.
+**Baza — Supabase.** Har bir javob `bogcha_submissions` jadvaliga saqlanadi.
+Jadvalda RLS yoqilgan va hech qanday ochiq policy yo'q — faqat server
+tomonidan (`SUPABASE_SERVICE_ROLE_KEY` bilan) yozish/o'qish mumkin, brauzerdan
+to'g'ridan-to'g'ri kirib bo'lmaydi.
 
 ---
 
