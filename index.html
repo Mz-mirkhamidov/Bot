@@ -1,0 +1,503 @@
+<!doctype html>
+<html lang="uz">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#1e5eb8">
+<title>Bog'cha so'rovnomasi</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='22' fill='%231e5eb8'/><path d='M50 20 L80 38 L80 46 L50 28 L20 46 L20 38 Z' fill='white'/><rect x='30' y='50' width='40' height='30' rx='4' fill='white'/></svg>">
+<meta name="description" content="Bog'cha rahbarlari uchun qisqa so'rovnoma">
+<meta name="robots" content="noindex">
+<style>
+  :root{
+    --bg:#ffffff; --bg2:#f4f7fb; --card:#ffffff;
+    --text:#15181d; --muted:#6b7684; --border:#dfe5ee;
+    --accent:#1e5eb8; --accent-soft:#eaf1fb;
+    --ok:#15803d; --warn:#b45309; --danger:#dc2626;
+    --radius:14px;
+  }
+  @media (prefers-color-scheme: dark){
+    :root{
+      --bg:#12151a; --bg2:#171b22; --card:#1b1f27;
+      --text:#eef1f5; --muted:#96a0ae; --border:#2a313c;
+      --accent:#5b9bf0; --accent-soft:#1a2536;
+    }
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{margin:0;padding:0}
+  body{
+    background:var(--bg); color:var(--text);
+    font-family:system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;
+    font-size:16px; line-height:1.5;
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:560px;margin:0 auto;padding:0 16px 40px;
+        padding-bottom:calc(40px + env(safe-area-inset-bottom))}
+  .screen{display:none}
+  .screen.on{display:block}
+
+  /* ---------- header / progress ---------- */
+  .top{
+    position:sticky;top:0;z-index:10;background:var(--bg);
+    padding:12px 0 10px;border-bottom:1px solid var(--border);
+    margin-bottom:20px;
+  }
+  .bar{height:5px;background:var(--border);border-radius:99px;overflow:hidden}
+  .bar i{display:block;height:100%;width:0;background:var(--accent);
+         border-radius:99px;transition:width .25s ease}
+  .meta{display:flex;justify-content:space-between;align-items:center;
+        margin-top:8px;font-size:13px;color:var(--muted)}
+  .back{background:none;border:0;color:var(--muted);font-size:14px;
+        padding:4px 0;cursor:pointer;font-family:inherit}
+  .back:disabled{opacity:.3}
+
+  /* ---------- typography ---------- */
+  h1{font-size:24px;line-height:1.25;margin:22px 0 8px;letter-spacing:-.3px}
+  h2{font-size:19px;line-height:1.35;margin:0 0 6px;font-weight:600}
+  p{margin:0 0 12px}
+  .lead{color:var(--muted);font-size:15px}
+  .qnum{color:var(--accent);font-weight:700;font-size:14px;
+        letter-spacing:.4px;margin-bottom:6px}
+  .hint{color:var(--muted);font-size:14px;margin:6px 0 0;font-style:italic}
+  .tag{display:inline-block;background:var(--accent-soft);color:var(--accent);
+       font-size:12px;padding:2px 9px;border-radius:99px;margin-left:6px;
+       font-style:normal;vertical-align:2px}
+
+  /* ---------- intro card ---------- */
+  .card{background:var(--bg2);border:1px solid var(--border);
+        border-radius:var(--radius);padding:16px;margin:0 0 18px}
+  .card p:last-child{margin-bottom:0}
+  .card b{color:var(--text)}
+
+  /* ---------- form ---------- */
+  label{display:block;font-size:14px;font-weight:600;margin:0 0 6px}
+  .req{color:var(--danger)}
+  input[type=text],input[type=tel],textarea{
+    width:100%;font:inherit;font-size:16px;color:var(--text);
+    background:var(--card);border:1.5px solid var(--border);
+    border-radius:12px;padding:13px 14px;outline:none;
+    transition:border-color .15s;resize:none;
+  }
+  input:focus,textarea:focus{border-color:var(--accent)}
+  textarea{min-height:140px;line-height:1.5}
+  .field{margin-bottom:16px}
+  .err{color:var(--danger);font-size:13px;margin-top:6px;display:none}
+  .field.bad input{border-color:var(--danger)}
+  .field.bad .err{display:block}
+
+  .opts{display:grid;gap:8px}
+  .opt{display:flex;align-items:flex-start;gap:10px;padding:13px 14px;
+       background:var(--card);border:1.5px solid var(--border);
+       border-radius:12px;cursor:pointer;font-size:15px}
+  .opt:active{background:var(--bg2)}
+  .opt.sel{border-color:var(--accent);background:var(--accent-soft)}
+  .opt input{margin:3px 0 0;accent-color:var(--accent);flex-shrink:0}
+  .opt span small{display:block;color:var(--muted);font-size:13px;margin-top:2px}
+
+  /* ---------- buttons ---------- */
+  .btn{display:block;width:100%;font:inherit;font-size:16px;font-weight:600;
+       padding:15px;border-radius:12px;border:0;cursor:pointer;
+       background:var(--accent);color:#fff;margin-top:8px}
+  .btn:active{opacity:.85}
+  .btn[disabled]{opacity:.5;cursor:default}
+  .btn.ghost{background:transparent;color:var(--muted);font-weight:500;
+             padding:12px;font-size:15px}
+  .row{display:flex;gap:10px;margin-top:8px}
+  .row .btn{margin-top:0}
+  .row .btn.sec{background:var(--bg2);color:var(--text);flex:0 0 38%}
+
+  /* ---------- review ---------- */
+  .rev{border-bottom:1px solid var(--border);padding:13px 0;cursor:pointer}
+  .rev:last-of-type{border-bottom:0}
+  .rev .q{font-size:14px;color:var(--muted);margin-bottom:4px}
+  .rev .a{font-size:15px;white-space:pre-wrap;word-break:break-word}
+  .rev .a.empty{color:var(--warn);font-style:italic}
+  .rev .edit{float:right;font-size:13px;color:var(--accent);margin-left:8px}
+
+  /* ---------- status ---------- */
+  .note{border-radius:12px;padding:13px 15px;font-size:14px;margin:14px 0}
+  .note.bad{background:#fdf0f0;border:1px solid #f3d2d2;color:#8f2020}
+  .note.good{background:#f0f9f3;border:1px solid #cfe8d7;color:#14532d}
+  @media (prefers-color-scheme: dark){
+    .note.bad{background:#2a1a1a;border-color:#4a2a2a;color:#f3b8b8}
+    .note.good{background:#16251b;border-color:#27452f;color:#a7e0bb}
+  }
+  .center{text-align:center;padding:32px 0}
+  .big{font-size:46px;line-height:1;margin-bottom:14px}
+  .saved{font-size:12px;color:var(--muted);height:14px;margin-top:6px}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<!-- ============ 1. KIRISH ============ -->
+<section id="s-intro" class="screen on">
+  <h1>Bog'cha faoliyati bo'yicha so'rovnoma</h1>
+  <p class="lead">20 ta savol &middot; taxminan 15 daqiqa</p>
+
+  <div class="card">
+    <p>Assalomu alaykum! Men bog'cha rahbarlari uchun ish jarayonini yengillashtiradigan tizim ustida ishlayapman. Nima qurish kerakligini o'zim o'ylab topishni emas, <b>real ishlayotgan rahbarlardan o'rganishni</b> to'g'ri deb bildim.</p>
+    <p>Iltimos, imkon qadar <b>aniq va rostini</b> yozing. Menga chiroyli javob emas, haqiqiy holat kerak.</p>
+    <p>Hech narsa sotmoqchi emasman. Javoblaringiz faqat menda qoladi.</p>
+  </div>
+
+  <div class="card" style="background:var(--accent-soft);border-color:transparent">
+    <p style="margin:0;font-size:14px">💾 Javoblaringiz brauzerda avtomatik saqlanadi — sahifani yopib, keyin qaytsangiz ham yo'qolmaydi.</p>
+  </div>
+
+  <h2 style="margin-top:24px">Avval bog'changiz haqida</h2>
+  <p class="lead" style="margin-bottom:18px">Faqat to'rtta savol, keyin asosiy qismga o'tamiz.</p>
+
+  <div class="field" id="f-name">
+    <label>Bog'cha nomi <span class="req">*</span></label>
+    <input type="text" id="i-name" autocomplete="organization" placeholder="Masalan: Kichkintoylar bog'chasi">
+    <div class="err">Bog'cha nomini yozing</div>
+  </div>
+
+  <div class="field">
+    <label>Manzil</label>
+    <input type="text" id="i-addr" placeholder="Shahar / tuman, ko'cha">
+  </div>
+
+  <div class="field">
+    <label>Telefon raqam</label>
+    <input type="tel" id="i-phone" autocomplete="tel" placeholder="+998 __ ___ __ __">
+  </div>
+
+  <div class="field">
+    <label>Rahbar ismi</label>
+    <input type="text" id="i-boss" autocomplete="name" placeholder="Ism familiya">
+  </div>
+
+  <div class="field" id="f-type">
+    <label>Bog'changiz qaysi turda ro'yxatdan o'tgan? <span class="req">*</span></label>
+    <div class="opts" id="typeOpts">
+      <label class="opt"><input type="radio" name="otype" value="Oilaviy"><span>Oilaviy<small>Uy sharoitida ochilgan oilaviy bog'cha</small></span></label>
+      <label class="opt"><input type="radio" name="otype" value="Xususiy"><span>Xususiy<small>To'liq xususiy, davlatdan subsidiya olmaydi</small></span></label>
+      <label class="opt"><input type="radio" name="otype" value="DXSh"><span>Davlat-xususiy sheriklik (DXSh)<small>Davlat bilan shartnoma bor, subsidiya olinadi</small></span></label>
+      <label class="opt"><input type="radio" name="otype" value="Bilmayman"><span>Aniq bilmayman</span></label>
+    </div>
+    <div class="err">Bittasini tanlang</div>
+  </div>
+
+  <button class="btn" id="btnStart">Boshlash</button>
+  <div class="saved" id="savedNote"></div>
+</section>
+
+<!-- ============ 2. SAVOLLAR ============ -->
+<section id="s-q" class="screen">
+  <div class="top">
+    <div class="bar"><i id="progBar"></i></div>
+    <div class="meta">
+      <button class="back" id="btnBack">&larr; Orqaga</button>
+      <span id="counter">1 / 20</span>
+    </div>
+  </div>
+
+  <div class="qnum" id="qNum">SAVOL 1</div>
+  <h2 id="qText"></h2>
+  <p class="hint" id="qHint"></p>
+
+  <div style="margin-top:16px">
+    <textarea id="qInput" placeholder="Javobingizni yozing..."></textarea>
+    <div class="saved" id="saveTick"></div>
+  </div>
+
+  <button class="btn" id="btnNext">Keyingi</button>
+  <button class="btn ghost" id="btnSkip">Bu savolni tashlab ketish</button>
+</section>
+
+<!-- ============ 3. KO'RIB CHIQISH ============ -->
+<section id="s-review" class="screen">
+  <h1>Javoblaringizni ko'rib chiqing</h1>
+  <p class="lead">Biror javobni o'zgartirmoqchi bo'lsangiz — ustiga bosing.</p>
+  <div id="revList" style="margin-top:18px"></div>
+  <div id="sendErr"></div>
+  <button class="btn" id="btnSend" style="margin-top:22px">Yuborish</button>
+  <button class="btn ghost" id="btnBackToQ">Savollarga qaytish</button>
+</section>
+
+<!-- ============ 4. RAHMAT ============ -->
+<section id="s-done" class="screen">
+  <div class="center">
+    <div class="big">✅</div>
+    <h1 style="margin-top:0">Katta rahmat!</h1>
+    <p class="lead">Javoblaringiz yuborildi. Bu men uchun har qanday kitobdan qimmatroq ma'lumot.</p>
+    <p class="lead">Savollaringiz bo'lsa yoki qo'shimcha aytmoqchi bo'lsangiz — bemalol yozing.</p>
+  </div>
+</section>
+
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  var QS = [
+    {t:"Bog'cha qachon ochilgan, hozir nechta bola qatnaydi va umuman necha o'ringa joyingiz yetadi?"},
+    {t:"Nega aynan shu turdagi bog'chani tanlagansiz? Boshqa turga o'tishni o'ylab ko'rganmisiz?",
+     h:"Oilaviy / xususiy / DXSh — nega aynan o'shanisi?"},
+    {t:"Bir bola uchun ota-onadan oyiga qancha to'lov olasiz va nechta xodim ishlaydi?"},
+    {t:"Davlatdan subsidiya olasizmi? Olsangiz — umumiy daromadingizning taxminan necha foizi subsidiyadan keladi?"},
+    {t:"O'tgan 12 oy ichida eng ko'p pul yo'qotgan yoki eng ko'p zarar ko'rgan holatingiz nima bo'ldi?",
+     h:"Taxminan qancha edi va nima sababdan kelib chiqdi? Bu men uchun eng muhim savol — iltimos batafsil yozing.", key:true},
+    {t:"Subsidiya kechikkan, kutilganidan kam kelgan yoki umuman kelmagan holat bo'lganmi?",
+     h:"Agar subsidiya olmasangiz — bu savolni tashlab keting. Bo'lgan bo'lsa: qachon, qancha summa, sababi va qanday hal qildingiz?"},
+    {t:"Hozir bo'sh o'rin bormi — nechta va qancha vaqtdan beri bo'sh turibdi?",
+     h:"O'tgan yil davomida nechta bola ketib qoldi va nega?"},
+    {t:"Hozir nechta ota-ona to'lovni kechiktirgan va umumiy qancha qarz yig'ilgan?",
+     h:"Ularga qanday eslatasiz?"},
+    {t:"Ish kuningizning eng ko'p vaqtini nima oladi? Qaysi ish sizni eng ko'p charchatadi yoki asabingizni buzadi?",
+     h:"Bu ham men uchun eng muhim savollardan biri.", key:true},
+    {t:"Majburiy hujjat va hisobotlarga haftasiga taxminan qancha vaqt ketadi?",
+     h:"Qaysi biri eng ko'p vaqt oladi? Tekshiruvda hujjat sababli muammo yoki jarima bo'lganmi?"},
+    {t:"Har bir bola uchun alohida individual rivojlanish varaqasi to'ldiriladimi?",
+     h:"Kim to'ldiradi va bitta bolaga qancha vaqt ketadi?"},
+    {t:"Bolalarning kunlik davomatini qanday belgilaysiz va bu kuniga qancha vaqt oladi?",
+     h:"Tizim yoki ilova xato qilgan, ishlamagan holat bo'lganmi?"},
+    {t:"Yangi bolalar asosan qayerdan keladi?",
+     h:"Hech reklama berganmisiz — qayerga, qancha sarfladingiz va natija qanday bo'ldi?"},
+    {t:"Ota-onalar bilan kunlik aloqa qanday olib boriladi?",
+     h:"Bolaning surati yoki videosi yuboriladimi — kim qiladi va kuniga qancha vaqt oladi? Ota-onalar eng ko'p nimadan norozi bo'ladi?"},
+    {t:"Hozir ishingizda qanday dastur yoki ilovalardan foydalanasiz?",
+     h:"Daftar, Excel, Telegram guruh, biror dastur va hokazo."},
+    {t:"Kidzone, Zukkoma yoki bog'chalar uchun boshqa dastur haqida eshitganmisiz?",
+     h:"Sizga taklif qilishganmi? Ishlatasizmi — yoki nega ishlatmaysiz? Ishlatmagan bo'lsangiz, sababi men uchun juda muhim.", key:true},
+    {t:"Bog'cha ishini yengillashtirish uchun biror narsaga pul to'laganmisiz?",
+     h:"Dastur, xizmat, buxgalter, yordamchi — qancha to'lagansiz va foyda berdimi?"},
+    {t:"Qaysi ishni pul to'lab bo'lsa ham boshqa birov qilib berishini xohlar edingiz?"},
+    {t:"Bog'cha ochmoqchi bo'lgan tanishingizga “buni oldindan bilganimda edi” deb nimani aytgan bo'lar edingiz?"},
+    {t:"Boshqa bog'cha rahbarlari bilan qayerda muloqot qilasiz?",
+     h:"Telegram guruh, uyushma, tanishlar davrasi. Guruh nomini yozib bera olasizmi? Yana kim bilan shu mavzuda gaplashsam bo'ladi?"}
+  ];
+
+  var KEY = "bogcha_sorovnoma_v1";
+  var st = { org:{name:"",addr:"",phone:"",boss:"",type:""}, ans:[], idx:0, sent:false };
+  for (var i=0;i<QS.length;i++) st.ans.push("");
+
+  /* ---------- storage (himoyalangan) ---------- */
+  function save(){
+    try{ localStorage.setItem(KEY, JSON.stringify(st)); }catch(e){}
+  }
+  function load(){
+    try{
+      var raw = localStorage.getItem(KEY);
+      if(!raw) return false;
+      var d = JSON.parse(raw);
+      if(!d || !d.ans) return false;
+      st.org = d.org || st.org;
+      for(var i=0;i<QS.length;i++) st.ans[i] = (d.ans[i]||"");
+      st.idx = Math.min(Math.max(d.idx|0,0), QS.length-1);
+      st.sent = !!d.sent;
+      return true;
+    }catch(e){ return false; }
+  }
+
+  var $ = function(id){ return document.getElementById(id); };
+  function show(id){
+    var sc = document.querySelectorAll(".screen");
+    for(var i=0;i<sc.length;i++) sc[i].classList.remove("on");
+    $(id).classList.add("on");
+    window.scrollTo(0,0);
+  }
+
+  /* ---------- kirish ekrani ---------- */
+  function fillIntro(){
+    $("i-name").value  = st.org.name  || "";
+    $("i-addr").value  = st.org.addr  || "";
+    $("i-phone").value = st.org.phone || "";
+    $("i-boss").value  = st.org.boss  || "";
+    if(st.org.type){
+      var rs = document.getElementsByName("otype");
+      for(var i=0;i<rs.length;i++){
+        if(rs[i].value===st.org.type){ rs[i].checked=true; rs[i].parentNode.classList.add("sel"); }
+      }
+    }
+    var answered = 0;
+    for(var j=0;j<st.ans.length;j++) if(st.ans[j]) answered++;
+    if(answered>0){
+      $("btnStart").textContent = "Davom etish (" + answered + "/" + QS.length + ")";
+      $("savedNote").textContent = "Oldingi javoblaringiz saqlangan.";
+    }
+  }
+
+  var typeBox = $("typeOpts");
+  typeBox.addEventListener("change", function(){
+    var ls = typeBox.getElementsByClassName("opt");
+    for(var i=0;i<ls.length;i++) ls[i].classList.remove("sel");
+    var rs = document.getElementsByName("otype");
+    for(var k=0;k<rs.length;k++) if(rs[k].checked){
+      rs[k].parentNode.classList.add("sel");
+      st.org.type = rs[k].value;
+    }
+    $("f-type").classList.remove("bad");
+    save();
+  });
+
+  ["i-name","i-addr","i-phone","i-boss"].forEach(function(id){
+    $(id).addEventListener("input", function(){
+      st.org.name  = $("i-name").value.trim();
+      st.org.addr  = $("i-addr").value.trim();
+      st.org.phone = $("i-phone").value.trim();
+      st.org.boss  = $("i-boss").value.trim();
+      if(st.org.name) $("f-name").classList.remove("bad");
+      save();
+    });
+  });
+
+  $("btnStart").addEventListener("click", function(){
+    var ok = true;
+    if(!$("i-name").value.trim()){ $("f-name").classList.add("bad"); ok=false; }
+    if(!st.org.type){ $("f-type").classList.add("bad"); ok=false; }
+    if(!ok){
+      var bad = document.querySelector(".field.bad");
+      if(bad) bad.scrollIntoView({behavior:"smooth", block:"center"});
+      return;
+    }
+    renderQ();
+    show("s-q");
+  });
+
+  /* ---------- savollar ---------- */
+  var input = $("qInput"), tick = $("saveTick"), tmr = null;
+
+  function renderQ(){
+    var q = QS[st.idx];
+    $("qNum").textContent = "SAVOL " + (st.idx+1) + (q.key ? " · MUHIM" : "");
+    $("qText").textContent = q.t;
+    $("qHint").textContent = q.h || "";
+    $("qHint").style.display = q.h ? "block" : "none";
+    input.value = st.ans[st.idx] || "";
+    $("counter").textContent = (st.idx+1) + " / " + QS.length;
+    $("progBar").style.width = (st.idx/QS.length*100) + "%";
+    $("btnBack").disabled = false;
+    $("btnNext").textContent = (st.idx === QS.length-1) ? "Yakunlash" : "Keyingi";
+    tick.textContent = "";
+    window.scrollTo(0,0);
+  }
+
+  input.addEventListener("input", function(){
+    st.ans[st.idx] = input.value;
+    if(tmr) clearTimeout(tmr);
+    tmr = setTimeout(function(){ save(); tick.textContent = "Saqlandi"; }, 400);
+  });
+
+  function next(){
+    st.ans[st.idx] = input.value;
+    save();
+    if(st.idx === QS.length-1){ renderReview(); show("s-review"); return; }
+    st.idx++; save(); renderQ();
+  }
+  $("btnNext").addEventListener("click", next);
+  $("btnSkip").addEventListener("click", next);
+
+  $("btnBack").addEventListener("click", function(){
+    st.ans[st.idx] = input.value; save();
+    if(st.idx === 0){ fillIntro(); show("s-intro"); return; }
+    st.idx--; save(); renderQ();
+  });
+
+  /* ---------- ko'rib chiqish ---------- */
+  function renderReview(){
+    var box = $("revList");
+    box.innerHTML = "";
+    for(var i=0;i<QS.length;i++){
+      (function(n){
+        var d = document.createElement("div");
+        d.className = "rev";
+        var a = st.ans[n] ? st.ans[n] : "Javob berilmagan";
+        var cls = st.ans[n] ? "a" : "a empty";
+        d.innerHTML = '<div class="q"><span class="edit">o‘zgartirish</span>'
+                    + (n+1) + ". " + esc(QS[n].t) + '</div><div class="'+cls+'">'
+                    + esc(a) + '</div>';
+        d.addEventListener("click", function(){
+          st.idx = n; save(); renderQ(); show("s-q");
+        });
+        box.appendChild(d);
+      })(i);
+    }
+    $("progBar").style.width = "100%";
+  }
+  function esc(s){
+    return String(s).replace(/[&<>"]/g, function(c){
+      return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c];
+    });
+  }
+
+  $("btnBackToQ").addEventListener("click", function(){
+    st.idx = 0; renderQ(); show("s-q");
+  });
+
+  /* ---------- yuborish ---------- */
+  var sending = false;
+  $("btnSend").addEventListener("click", function(){
+    if(sending) return;
+    sending = true;
+    var b = $("btnSend");
+    b.disabled = true; b.textContent = "Yuborilmoqda...";
+    $("sendErr").innerHTML = "";
+
+    var payload = {
+      org: st.org,
+      answers: QS.map(function(q,i){ return {n:i+1, q:q.t, a:st.ans[i]||""}; }),
+      meta: { at: new Date().toISOString(), ua: navigator.userAgent.slice(0,180) }
+    };
+
+    var done = false;
+    var killer = setTimeout(function(){ if(!done) fail("Internet sekin yoki javob kelmadi."); }, 25000);
+
+    fetch("/api/submit", {
+      method:"POST",
+      headers:{"Content-Type":"application/json"},
+      body: JSON.stringify(payload)
+    }).then(function(r){
+      return r.json().catch(function(){ return {ok:r.ok}; });
+    }).then(function(res){
+      done = true; clearTimeout(killer);
+      if(res && res.ok){
+        st.sent = true; save();
+        show("s-done");
+      } else {
+        fail(res && res.error === "not_configured"
+          ? "Sayt hali to'liq sozlanmagan."
+          : "Yuborishda xatolik bo'ldi.");
+      }
+    }).catch(function(){
+      done = true; clearTimeout(killer);
+      fail("Internetga ulanib bo'lmadi.");
+    });
+
+    function fail(msg){
+      sending = false;
+      b.disabled = false; b.textContent = "Qayta yuborish";
+      $("sendErr").innerHTML =
+        '<div class="note bad"><b>' + esc(msg) + '</b><br>' +
+        'Javoblaringiz yo‘qolmadi — saqlanib turibdi. Qayta urinib ko‘ring, ' +
+        'yoki javoblarni nusxalab Telegram orqali yuboring.</div>' +
+        '<button class="btn ghost" id="btnCopy">Javoblarni nusxalash</button>';
+      var cp = $("btnCopy");
+      if(cp) cp.addEventListener("click", function(){
+        var t = "BOG'CHA: " + st.org.name + "\nMANZIL: " + st.org.addr +
+                "\nTELEFON: " + st.org.phone + "\nRAHBAR: " + st.org.boss +
+                "\nTURI: " + st.org.type + "\n\n";
+        for(var i=0;i<QS.length;i++){
+          t += (i+1) + ". " + QS[i].t + "\n" + (st.ans[i] || "—") + "\n\n";
+        }
+        var ta = document.createElement("textarea");
+        ta.value = t; ta.style.position="fixed"; ta.style.opacity="0";
+        document.body.appendChild(ta); ta.select();
+        try{ document.execCommand("copy"); cp.textContent = "Nusxalandi ✓"; }
+        catch(e){ cp.textContent = "Nusxalab bo'lmadi"; }
+        document.body.removeChild(ta);
+      });
+    }
+  });
+
+  /* ---------- ishga tushirish ---------- */
+  load();
+  fillIntro();
+  if(st.sent) show("s-done");
+})();
+</script>
+</body>
+</html>
