@@ -3,9 +3,10 @@
 Uch fayl, hech qanday build yo'q. Vercel'ga tashlaysiz va ikkita o'zgaruvchi qo'shasiz — tamom.
 
 ```
-index.html          ← butun sayt (CSS va JS ichida, tashqi fayl yo'q)
-api/submit.js       ← javoblarni Telegramga yuboradi
-package.json        ← faqat "type": "module" uchun
+index.html                  ← butun sayt (CSS va JS ichida, tashqi fayl yo'q)
+api/submit.js               ← javoblarni Telegramga yuboradi
+api/telegram-webhook.js     ← bot /start bosilganda saytga tugma yuboradi
+package.json                ← faqat "type": "module" uchun
 ```
 
 ---
@@ -53,6 +54,27 @@ O'zgaruvchilar faqat qayta deploy qilingandan keyin ishlaydi.
 
 Saytni oching, bir-ikkita savolga javob yozib **Yuborish** bosing.
 Telegramda xabar kelishi kerak: bog'cha ma'lumoti + barcha javoblar + JSON fayl.
+
+## 6. Bot /start bosilganda saytga tugma chiqishi uchun (1 daqiqa)
+
+Bot deploy qilingandan keyin, Telegramga "menga shu webhook manzilga xabar yubor" deb
+bir marta aytish kerak. Terminalda (yoki brauzerda) shuni oching, `<TOKEN>` o'rniga
+o'z tokeningizni qo'ying:
+
+```
+https://api.telegram.org/bot<TOKEN>/setWebhook?url=https://suhbat-omega.vercel.app/api/telegram-webhook
+```
+
+`{"ok":true,"result":true,...}` chiqsa — tayyor. Endi botga `/start` bosilganda
+**"📝 So'rovnomani boshlash"** tugmasi chiqadi va bosilganda saytga o'tadi.
+
+Agar sayt boshqa manzilda bo'lsa — Vercel'da `SITE_URL` o'zgaruvchisini shunga mos qo'ying
+(qo'shmasangiz, yuqoridagi standart manzil ishlatiladi).
+
+**Xavfsizlik uchun (ixtiyoriy):** `TELEGRAM_WEBHOOK_SECRET` degan o'zgaruvchiga
+o'zingiz tanlagan tasodifiy matn yozib, `setWebhook` so'roviga
+`&secret_token=<xuddi shu matn>` qo'shib yuborsangiz, faqat Telegram'dan kelgan
+so'rovlar qabul qilinadi.
 
 ---
 
