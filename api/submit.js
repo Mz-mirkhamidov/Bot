@@ -6,13 +6,11 @@
 //   TELEGRAM_CHAT_ID           — qisqa xabar tushadigan chat
 //   SUPABASE_URL               — Supabase loyiha manzili
 //   SUPABASE_SERVICE_ROLE_KEY  — Supabase service_role (maxfiy) kaliti
-//   SITE_URL                   — admin panel havolasi uchun (ixtiyoriy)
 
 import { sbInsert, supabaseConfigured } from "../lib/supabase.js";
 
 const TG = "https://api.telegram.org/bot";
 const MAX = 3800; // Telegram chegarasi 4096 — zaxira bilan
-const DEFAULT_SITE_URL = "https://suhbat-omega.vercel.app";
 
 function esc(s) {
   return String(s == null ? "" : s)
@@ -117,7 +115,6 @@ export default async function handler(req, res) {
 
   const token = process.env.TELEGRAM_BOT_TOKEN;
   const chatId = process.env.TELEGRAM_CHAT_ID;
-  const siteUrl = process.env.SITE_URL || DEFAULT_SITE_URL;
 
   let savedToDb = false;
   if (supabaseConfigured()) {
@@ -151,7 +148,7 @@ export default async function handler(req, res) {
         "🏫 <b>Yangi so'rovnoma</b>\n" +
         esc(org.name || "—") + " · " + esc(org.phone || "—") + "\n" +
         "To'ldirilgan: " + answered + " / " + answers.length + "\n\n" +
-        "To'liq: " + esc(siteUrl) + "/admin/";
+        "To'liq javoblarni ko'rish uchun botga /admin yuboring.";
       await send(token, chatId, short);
     } else {
       await sendFullFallback(token, chatId, org, answers, answered, data);
