@@ -5,15 +5,10 @@ So'rovnoma sayti + bot + admin panel, uchtasi ham shu bitta loyihada.
 
 ```
 index.html                  ← butun sayt (CSS va JS ichida, tashqi fayl yo'q)
-admin/index.html             ← admin panel (parol bilan kirish, javoblar ro'yxati)
 api/submit.js                ← javobni bazaga saqlaydi + Telegramga qisqa xabar yuboradi
-api/telegram-webhook.js      ← bot /start bosilganda saytga tugma yuboradi
-api/admin/login.js           ← admin parolni tekshiradi, sessiya cookie qo'yadi
-api/admin/logout.js          ← sessiyani tugatadi
-api/admin/list.js            ← barcha so'rovnomalar ro'yxati
-api/admin/submission.js      ← bitta so'rovnomaning to'liq tafsiloti
-api/admin/export.js          ← bitta so'rovnomani qisqa .txt fayl qilib yuklab beradi
-lib/                         ← Supabase va admin autentifikatsiya uchun yordamchi kod
+api/telegram-webhook.js      ← bot: /start (saytga tugma) va /admin (javoblar ro'yxati)
+lib/supabase.js               ← Supabase REST'ga yengil wrapper
+lib/formatSubmission.js       ← bitta javobni qisqa .txt fayl qilib formatlaydi
 package.json                 ← faqat "type": "module" uchun
 ```
 
@@ -84,12 +79,15 @@ o'zingiz tanlagan tasodifiy matn yozib, `setWebhook` so'roviga
 `&secret_token=<xuddi shu matn>` qo'shib yuborsangiz, faqat Telegram'dan kelgan
 so'rovlar qabul qilinadi.
 
-## 7. Admin panel (`/admin`) — barcha javoblarni ko'rish
+## 7. Admin panel — botning o'zida, `/admin` buyrug'i
 
-Har bir to'ldirilgan so'rovnoma endi bazaga (Supabase) saqlanadi va `/admin`
-sahifasida ro'yxat + har birining to'liq tafsiloti ko'rinadi. Har bir yozuvni
-bitta tugma bilan qisqa `.txt` fayl qilib yuklab olish mumkin — uzun matn
-o'qishga to'g'ri kelmaydi.
+Web-sahifa yo'q — hammasi Telegramning ichida. Har bir to'ldirilgan
+so'rovnoma bazaga (Supabase) saqlanadi. Botga **`/admin`** yuborsangiz:
+
+1. Oxirgi so'rovnomalar ro'yxati tugmalar shaklida chiqadi (bog'cha nomi, sana, necha savol javoblangan)
+2. Tugmani bossangiz — o'sha bog'cha haqida qisqa ma'lumot xabar qilinadi
+3. Shu zahoti barcha savol-javoblar bilan bitta qisqa **`.txt` fayl** ham keladi — uzun matn o'qishga to'g'ri kelmaydi
+4. 8 tadan ko'p bo'lsa — "➡️ Yana ko'rsatish" tugmasi bilan keyingi sahifaga o'tasiz
 
 **Kerakli o'zgaruvchilar** (Vercel → Settings → Environment Variables):
 
@@ -97,15 +95,13 @@ o'qishga to'g'ri kelmaydi.
 |---|---|
 | `SUPABASE_URL` | Supabase loyihangiz manzili (masalan `https://xxxxx.supabase.co`) |
 | `SUPABASE_SERVICE_ROLE_KEY` | Supabase → Settings → API → **service_role** (maxfiy) kalit |
-| `ADMIN_PASSWORD` | `/admin` sahifasiga kirish uchun o'zingiz tanlagan parol |
+| `ADMIN_CHAT_ID` | `/admin` buyrug'iga ruxsat beriladigan Telegram chat ID |
 
-`ADMIN_PASSWORD` — bu **admin kim ekanini bildiruvchi yagona narsa**: uni
-biladigan odam `/admin`ga kira oladi. Agar buni Telegram chat ID orqali emas,
-alohida odam/qurilma uchun boshqacha qilib xohlasangiz (masalan bir nechta
-admin, har biriga alohida parol) — ayting, shuni ham qo'shib beraman.
+`ADMIN_CHAT_ID`ni qo'shmasangiz, `TELEGRAM_CHAT_ID` avtomatik admin
+hisoblanadi. Agar bir nechta odam admin bo'lishi kerak bo'lsa — ayting,
+ro'yxat qilib beraman.
 
-Qo'shgandan keyin qayta deploy qiling, so'ng `https://suhbat-omega.vercel.app/admin`
-sahifasini oching va parolni kiriting.
+Qo'shgandan keyin qayta deploy qiling va botga `/admin` yuboring.
 
 ---
 
@@ -121,9 +117,9 @@ deb turadi va javoblari joyida bo'ladi.
 
 **Telegram — endi qisqa xabar.** Yangi so'rovnoma kelganda Telegramga
 bog'cha nomi, telefon va to'ldirilgan savollar soni bilan bitta qisqa xabar
-keladi (to'liq javoblar endi `/admin` panelida). Agar bironsababdan baza
-yozib bo'lmasa — eski uslubda to'liq matn + JSON fayl zaxira sifatida
-yuboriladi, hech qanday javob yo'qolmaydi.
+keladi (to'liq javoblarni botga `/admin` yuborib ko'rasiz). Agar biror
+sababdan baza yozib bo'lmasa — eski uslubda to'liq matn + JSON fayl zaxira
+sifatida yuboriladi, hech qanday javob yo'qolmaydi.
 
 **Baza — Supabase.** Har bir javob `bogcha_submissions` jadvaliga saqlanadi.
 Jadvalda RLS yoqilgan va hech qanday ochiq policy yo'q — faqat server
