@@ -1,35 +1,103 @@
-# Suhbat
+# Bog'cha so'rovnomasi — o'rnatish
 
-Bog'cha rahbarlari bilan intervyu yig'ish uchun Telegram Mini App. To'liq spetsifikatsiya — `TZ.md`.
+Uch fayl, hech qanday build yo'q. Vercel'ga tashlaysiz va ikkita o'zgaruvchi qo'shasiz — tamom.
 
-## Texnologiyalar
-
-Next.js 15 (App Router) · TypeScript · Tailwind 4 · Supabase (Postgres + Storage) ·
-`@telegram-apps/sdk-react` · `grammy` (Telegram bot) · `@google/genai` (Gemini) · `zod`
-
-## Ishga tushirish
-
-```bash
-npm install
-cp .env.local.example .env.local   # va qiymatlarni to'ldiring
-npm run seed                        # savollarni bazaga yozadi
-npm run dev
+```
+index.html          ← butun sayt (CSS va JS ichida, tashqi fayl yo'q)
+api/submit.js       ← javoblarni Telegramga yuboradi
+package.json        ← faqat "type": "module" uchun
 ```
 
-## Muhit o'zgaruvchilari
+---
 
-`.env.local.example` faylida ro'yxat bor. Eng muhimlari:
+## 1. Telegram bot yarating (2 daqiqa)
 
-- `NEXT_PUBLIC_SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY` — Supabase Dashboard > Project Settings > API
-- `TELEGRAM_BOT_TOKEN`, `TELEGRAM_BOT_USERNAME`, `TELEGRAM_WEBHOOK_SECRET`, `ADMIN_TELEGRAM_IDS`
-- `GEMINI_API_KEY`, `GEMINI_MODEL`
+1. Telegramda **@BotFather** ga kiring → `/newbot`
+2. Nom va username bering
+3. U sizga **token** beradi — shunga o'xshash:
+   `8123456789:AAH_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx`
+4. Tokenni saqlab qo'ying, hech kimga bermang
 
-## Ma'lumotlar bazasi
+## 2. O'z chat ID'ingizni oling (1 daqiqa)
 
-Sxema `supabase/migrations/001_init.sql` faylida. Supabase loyihasida bir marta qo'llaniladi
-(SQL Editor yoki Supabase CLI orqali).
+1. Telegramda **@userinfobot** ga `/start` yuboring
+2. U sizga `Id: 123456789` deb qaytaradi — bu sizning chat ID'ingiz
+3. Endi **o'zingiz yaratgan botga** kirib `/start` bosing
+   (bot sizga xabar yubora olishi uchun shu qadam **majburiy**)
 
-## Savollar
+## 3. Vercel'ga chiqaring (2 daqiqa)
 
-`src/data/questions.ts` — 45 ta savol, 9 blok (A—I), TZ 6-bo'limiga muvofiq. `npm run seed`
-shu fayldagi ma'lumotni bazaga (`questionnaires`, `question_blocks`, `questions`) yozadi.
+**Variant A — terminal orqali:**
+```bash
+cd suhbat-site
+npx vercel --prod
+```
+
+**Variant B — vercel.com orqali:** papkani GitHub'ga qo'yib, Vercel'da "Import Project".
+
+Framework so'rasa — **Other** yoki **No framework** tanlang. Build command bo'sh qolsin.
+
+## 4. Ikkita o'zgaruvchini qo'shing (1 daqiqa)
+
+Vercel → loyihangiz → **Settings → Environment Variables**:
+
+| Nomi | Qiymati |
+|---|---|
+| `TELEGRAM_BOT_TOKEN` | BotFather bergan token |
+| `TELEGRAM_CHAT_ID` | @userinfobot bergan raqam |
+
+Qo'shgandan keyin **Deployments → oxirgisi → Redeploy** bosing.
+O'zgaruvchilar faqat qayta deploy qilingandan keyin ishlaydi.
+
+## 5. Sinab ko'ring
+
+Saytni oching, bir-ikkita savolga javob yozib **Yuborish** bosing.
+Telegramda xabar kelishi kerak: bog'cha ma'lumoti + barcha javoblar + JSON fayl.
+
+---
+
+## Nima qanday ishlaydi
+
+**Javoblar yo'qolmaydi.** Har bir harf yozilganda javob brauzer xotirasiga
+saqlanadi. Respondent sahifani yopib ketsa ham, qaytganda "Davom etish (7/20)"
+deb turadi va javoblari joyida bo'ladi.
+
+**Internet uzilsa.** Yuborish paytida xato chiqsa — javoblar o'chmaydi.
+"Qayta yuborish" tugmasi chiqadi, hamda "Javoblarni nusxalash" tugmasi
+(hammasini matn qilib nusxalaydi, Telegram orqali qo'lda yuborsa bo'ladi).
+
+**Telegram cheklovi.** Bitta xabar 4096 belgidan oshmaydi, shuning uchun javoblar
+bir necha xabarga bo'lib yuboriladi. Oxirida to'liq JSON fayl ham keladi —
+keyinchalik tahlil qilish uchun shu qulay.
+
+**Hech qanday baza yo'q.** Ataylab. Buziladigan joy kam bo'lsin dedik.
+Agar keyin javoblarni bazaga yig'ish kerak bo'lsa — `TZ.md` dagi to'liq variantga
+o'tasiz.
+
+---
+
+## O'zgartirish kerak bo'lsa
+
+**Savol matnini o'zgartirish:** `index.html` ichida `var QS = [` dan boshlanadigan
+ro'yxat. Har bir savol: `{t:"savol matni", h:"kichik izoh"}`.
+`key:true` — savol "MUHIM" deb belgilanadi.
+
+**Savol qo'shish/olib tashlash:** shu ro'yxatga qo'shasiz yoki o'chirasiz.
+Sanoq (1/20) avtomatik moslashadi, boshqa joyni tegishning hojati yo'q.
+
+**Kirish ekranidagi maydonlar:** `<section id="s-intro">` ichida.
+
+---
+
+## Sinovdan o'tgan
+
+Quyidagilar avtomatik brauzer testida tekshirilgan:
+
+- Bo'sh forma bilan "Boshlash" → ikkala majburiy maydon qizarardi
+- 20 ta savolni ketma-ket bosib o'tish, sanoq to'g'ri ishlaydi
+- Ko'rib chiqish ekranida javobsizlar sariq rangda ko'rinadi
+- Javobga bosib tahrirlashga qaytish
+- Sahifani yangilash → javoblar tiklanadi
+- Yuborish → rahmat ekrani
+- Qorong'i rejim
+- JS xatolari: yo'q
